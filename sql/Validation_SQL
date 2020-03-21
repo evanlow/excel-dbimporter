@@ -1,0 +1,157 @@
+-- Validation 1.1
+
+CREATE TABLE IMPORTERROR_1_1_CC_MASTER_DATA
+(
+select 
+"1-1 FAIL: CC PREFIX MISMATCH" as "Error",
+ICMD.* 
+from IMPORTED_CC_MASTER_DATA ICMD
+where left(ICMD.Costcenter,4) <> ICMD.BusinessArea
+or left(ICMD.Profitcenter,4) <> ICMD.BusinessArea
+)
+
+
+-- Validation 1.2
+
+CREATE TABLE IMPORTERROR_1_2_PCC_INCORRECT
+(
+select 
+"1-2 FAIL: PCC INCORRECT" as "Error",
+mid(CC.Costcenter,5,3) "CC567", mid(CC.Costcenter,8,3) "CC8910", CC.Costcenter, CC.Profitcenter,  mid(CC.Profitcenter,8,3) "PC8910", ESRULES.CCC5, ESRULES.CCC6, ESRULES.CCC7, ESRULES.PCC8, ESRULES.PCC9, ESRULES.PCC10
+from IMPORTED_CC_MASTER_DATA CC, IMPORTED_ES_CHECK_RULES ESRULES
+where 
+mid(CC.Costcenter,5,3) = concat(ESRULES.CCC5,ESRULES.CCC6, ESRULES.CCC7)
+and (
+		(ESRULES.PCC8 = 'C8' and  mid(CC.Profitcenter,8,3)<> mid(CC.Costcenter,8,3)) 
+		or (ESRULES.PCC8 = '0' and mid(CC.Profitcenter,8,3)<>'000')
+	)
+
+)
+
+
+
+-- Validation 1.3
+
+
+CREATE TABLE IMPORTERROR_1_3_CC567_INVALID
+(select 
+"1-3 FAIL: CC567 INVALID" as "Error",
+mid(CC.Costcenter,5,3) "CC567", CC.Costcenter from IMPORTED_CC_MASTER_DATA CC
+where mid(CC.Costcenter,5,3) not in
+(select concat(CCC5,CCC6,CCC7) from IMPORTED_ES_CHECK_RULES)
+)
+
+CREATE TABLE IMPORTERROR_1_3_CC_HIERARCHYAREA_INVALID
+(
+select 
+"1-3 FAIL: CCHierarchyArea INVALID" as "Error",
+ESRULES.CCHierarchyAreaPCGroup, CC.*
+from IMPORTED_CC_MASTER_DATA CC, IMPORTED_ES_CHECK_RULES ESRULES
+where 
+mid(CC.Costcenter,5,3) = concat(ESRULES.CCC5,ESRULES.CCC6, ESRULES.CCC7)
+and ESRULES.CCHierarchyAreaPCGroup <> CC.Hierarchyarea
+)
+
+
+CREATE TABLE IMPORTERROR_1_3_PC_NOT_IN_PCMASTER
+(
+select 
+"1-3 FAIL: PC from CCMASTER NOT IN PC MASTER" as "Error",
+CC.* from IMPORTED_CC_MASTER_DATA CC 
+where Profitcenter not in 
+(select profitcenter from IMPORTED_PC_MASTER_DATA )
+)
+
+
+
+
+
+-- Validation 2.1
+
+CREATE TABLE IMPORTERROR_2_1_INCORRECT_PCC_PROFITCENTERGROUP
+(
+select 
+"2-1 FAIL: INCORRECT PCC PROFIT CENTER GROUP" as "Error",
+ESRULES.CCHierarchyAreaPCGroup "ESRulesPCGroup", PC.*, CC.Costcenter
+from IMPORTED_PC_MASTER_DATA PC, IMPORTED_CC_MASTER_DATA CC, IMPORTED_ES_CHECK_RULES ESRULES
+where PC.Profitcenter = CC.Profitcenter
+and mid(CC.Costcenter,5,3) = concat(ESRULES.CCC5,ESRULES.CCC6, ESRULES.CCC7)
+and upper(PC.Profitcentergroup)<>upper(ESRULES.CCHierarchyAreaPCGroup) 
+)
+
+
+
+
+-- Validation 2.2
+
+CREATE TABLE IMPORTERROR_2_2_INCORRECT_PCC_SEGMENT
+(select 
+"2-2 FAIL: INCORRECT SEGMENT" as "Error",
+upper(ESRULES.ESGroupLevel1) "ESGroupLevel1",
+PC.* 
+from IMPORTED_PC_MASTER_DATA PC, IMPORTED_CC_MASTER_DATA CC, IMPORTED_ES_CHECK_RULES ESRULES
+where PC.Profitcenter = CC.Profitcenter
+and mid(CC.Costcenter,5,3) = concat(ESRULES.CCC5,ESRULES.CCC6, ESRULES.CCC7)
+and PC.Segment<>upper(ESRULES.ESGroupLevel1)
+)
+
+
+--Validation 3.1
+
+CREATE TABLE IMPORTERROR_3_1_INCORRECT_BUSINESSAREA
+(
+select 
+"3-1 FAIL: INCORRECT BUSINESSAREA" as "Error",
+FCMD.* from IMPORTED_FC_MASTER_DATA FCMD
+where left(FCMD.FundCenter, 4) <> FCMD.BusinessArea
+)
+
+--Validation 4.1
+
+CREATE TABLE IMPORTERROR_4_1_FUNDCENTER_FM_DERIVATION
+(select 
+"4-1 FAIL: FM_DERIVATION FUNDCENTER NOT IN FC MASTER" as "Error",
+FMD.* from IMPORTED_FM_DERIVATION FMD
+where FMD.FundCenter not in 
+(select FundCenter from IMPORTED_FC_MASTER_DATA)
+)
+
+
+
+--Validation 5.1
+
+CREATE TABLE IMPORTERROR_5_1_FUNDCENTER_FM_BUDGET_MASTER
+(
+select 
+"5-1 FAIL: FM_BUDGETMASTER FUNDCENTER NOT IN FC MASTER" as "Error",
+FBM.* from IMPORTED_FM_BUDGET_MASTER FBM
+where FBM.FundCenter not in 
+(select FundCenter from IMPORTED_FC_MASTER_DATA)
+)
+
+
+-- Validation 5.2
+
+CREATE TABLE IMPORTERROR_5_2_BUDGETMASTER_FUNCTIONALAREA
+(
+select 
+"5-2 FAIL: FM_BUDGETMASTER FUNCTIONAL AREA INCORRECT" as "Error",
+FBM.* from 
+IMPORTED_FM_BUDGET_MASTER FBM
+where FBM.Functionalarea <> left(FBM.FundCenter,4)
+)
+
+
+
+-- Validation 5.3
+
+CREATE TABLE IMPORTERROR_5_3_BUDGETMASTER_COMMITMENTITEMCODE
+(
+select
+"5-3 FAIL: FM_BUDGETMASTER COMMITMENTITEMCODE INVALID" as "Error",
+FBM.* from 
+IMPORTED_FM_BUDGET_MASTER FBM
+where FBM.CommitmentItem not in 
+(select CommitmentItemCode from IMPORTED_COMMITMENT_ITEM)
+)
+
