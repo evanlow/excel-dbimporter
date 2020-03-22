@@ -83,7 +83,11 @@ for i in range(sh.nrows):
         ins_sql = "INSERT INTO " + newtable + " VALUES ("
         for x in range(numcol):
             if is_number(sh.row_values(i)[x]):
-                cellval = str(int(sh.row_values(i)[x]))
+                #if (sh.row_values(i)[x])%1 == 0:
+                #    cellval = str(int(sh.row_values(i)[x]))
+                #else:
+                #    cellval = str(sh.row_values(i)[x])
+                cellval = str(sh.row_values(i)[x])
             else:
                 cellval = sh.row_values(i)[x]
                 cellval = cellval.replace("'","''")
