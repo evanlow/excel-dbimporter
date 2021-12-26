@@ -11,3 +11,5 @@ python importexcel.py <xls path/filename>
 To import csv file:
 python importcsv.py <csv path/filename>
 
+
+Created this to help with one of my data migration projects
